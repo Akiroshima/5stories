@@ -10,19 +10,19 @@ namespace DomModel.Models
     /// </summary>
     public class Game
     {
-        private GameBoard _gameBoard;
-        private Score _score;
-        private Tetromino _currentPiece;
-        private Tetromino _nextPiece;
-        private Random _random;
+        private readonly GameBoard _gameBoard;
+        private readonly Score _score;
+        private Tetromino? _currentPiece;
+        private Tetromino? _nextPiece;
+        private readonly Random _random;
         private GameState _gameState;
-        private List<IGameObserver> _observers;
+        private readonly List<IGameObserver> _observers;
 
         public GameState State => _gameState;
         public GameBoard Board => _gameBoard;
         public Score Score => _score;
-        public Tetromino CurrentPiece => _currentPiece;
-        public Tetromino NextPiece => _nextPiece;
+        public Tetromino? CurrentPiece => _currentPiece;
+        public Tetromino? NextPiece => _nextPiece;
 
         public Game()
         {
@@ -187,9 +187,18 @@ namespace DomModel.Models
                 NotifyLinesCleared(clearedLines.Count);
             }
 
+            // ПРОВЕРИТЬ ИГРУ ПЕРЕД СПАВНОМ НОВОЙ ФИГУРЫ
+            if (_gameBoard.IsGameOver())
+            {
+                EndGame();
+                NotifyGameStateChanged();
+                return;
+            }
+
             SpawnNextPiece();
 
-            if (_gameBoard.IsGameOver())
+            // Проверить, может ли новая фигура быть размещена
+            if (!_gameBoard.CanPlacePiece(_currentPiece))
             {
                 EndGame();
             }
@@ -240,8 +249,8 @@ namespace DomModel.Models
 
         private Tetromino CreateRandomPiece()
         {
-            var types = Enum.GetValues(typeof(TetrominoType));
-            var randomType = (TetrominoType)types.GetValue(_random.Next(types.Length));
+            var types = (TetrominoType[])Enum.GetValues(typeof(TetrominoType));
+            var randomType = types[_random.Next(types.Length)];
             return new Tetromino(randomType, new Point(GameBoard.Width / 2 - 1, 0));
         }
 
