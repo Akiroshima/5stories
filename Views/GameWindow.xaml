@@ -27,6 +27,8 @@
             <Canvas x:Name="GameCanvas" 
                     Grid.Row="0"
                     Background="#3E3E3E"
+                    Width="200"
+                    Height="400"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"/>
 

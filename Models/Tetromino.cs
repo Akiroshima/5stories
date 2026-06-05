@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace DomModel.Models
 {
@@ -29,6 +30,7 @@ namespace DomModel.Models
             Type = type;
             Position = startPosition;
             Rotation = 0;
+            
             _shapePatterns = InitializeShapePatterns();
             Blocks = GetBlocksForRotation(0);
         }

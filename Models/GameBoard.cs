@@ -46,7 +46,14 @@ namespace DomModel.Models
         public bool CanPlacePiece(Tetromino piece)
         {
             return piece.GetAbsoluteBlocks().All(block => 
-                IsValidPosition(block.X, block.Y) && !IsOccupied(block.X, block.Y));
+            {
+                // Блоки выше поля (Y < 0) разрешены при спавне
+                if (block.Y < 0)
+                    return true;
+                
+                // Для остальных блоков - проверить валидность позиции и занятость
+                return IsValidPosition(block.X, block.Y) && !IsOccupied(block.X, block.Y);
+            });
         }
 
         /// <summary>
