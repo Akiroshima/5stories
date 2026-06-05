@@ -212,6 +212,17 @@ namespace DomModel.Models
         }
 
         /// <summary>
+        /// Запустить движок для загруженной игры без сброса доски
+        /// </summary>
+        public void StartLoaded()
+        {
+            IsRunning = true;
+            _gameTimer.Restart();
+            _currentState = new PlayingState();
+            _currentState.OnEnter(this);
+        }
+
+        /// <summary>
         /// Обработать входные данные (Command паттерн)
         /// </summary>
         public void ProcessInput(GameInput input)

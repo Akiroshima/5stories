@@ -47,6 +47,16 @@ namespace DomModel.Services
         }
 
         /// <summary>
+        /// Запустить игровой цикл для загруженной игры без сброса состояния
+        /// </summary>
+        public void StartLoaded()
+        {
+            _isRunning = true;
+            _gameEngine.StartLoaded();
+            OnStatusChanged?.Invoke(_gameEngine.GetGameStatus());
+        }
+
+        /// <summary>
         /// Отправить команду в игру
         /// </summary>
         public void SendCommand(InputType inputType)

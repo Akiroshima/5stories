@@ -3,6 +3,7 @@ using DomModel.Models;
 using DomModel.Services;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -28,6 +29,9 @@ namespace DomModel.ViewModels
         private bool _isPaused;
         private ObservableCollection<LeaderBoardEntry> _leaderBoard;
         private bool _isGameRunning;
+        private bool _isBusy;
+        private readonly GamePersistenceService _persistenceService;
+        private readonly string _saveFilePath;
 
         public bool[,] GridState
         {
@@ -71,6 +75,16 @@ namespace DomModel.ViewModels
             set => SetProperty(ref _isGameRunning, value);
         }
 
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                    Application.Current?.Dispatcher.BeginInvoke(new Action(CommandManager.InvalidateRequerySuggested));
+            }
+        }
+
         public ObservableCollection<LeaderBoardEntry> LeaderBoard
         {
             get => _leaderBoard;
@@ -84,6 +98,8 @@ namespace DomModel.ViewModels
         public ICommand MoveRightCommand { get; private set; } = null!;
         public ICommand MoveDownCommand { get; private set; } = null!;
         public ICommand RotateCommand { get; private set; } = null!;
+        public ICommand SaveGameCommand { get; private set; } = null!;
+        public ICommand LoadGameCommand { get; private set; } = null!;
 
         /// <summary>
         /// Конструктор ViewModel
@@ -106,6 +122,11 @@ namespace DomModel.ViewModels
             _gameLoopService.OnUpdate += UpdateGameView;
             _gameLoopService.OnStatusChanged += UpdateGameStatus;
 
+            _persistenceService = new GamePersistenceService();
+            _saveFilePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TetrisGame", "savegame.txt");
+
             InitializeCommands();
         }
 
@@ -118,6 +139,8 @@ namespace DomModel.ViewModels
             MoveRightCommand = new RelayCommand(_ => _inputService.HandleKeyPress("Right"));
             MoveDownCommand = new RelayCommand(_ => _inputService.HandleKeyPress("Down"));
             RotateCommand = new RelayCommand(_ => _inputService.HandleKeyPress("Space"));
+            SaveGameCommand = new RelayCommand(_ => _ = SaveGameInternalAsync(), _ => !IsBusy && IsGameRunning);
+            LoadGameCommand = new RelayCommand(_ => _ = LoadGameInternalAsync(), _ => !IsBusy);
         }
 
         public void StartGameAsync()
@@ -252,6 +275,89 @@ namespace DomModel.ViewModels
         public Game GetGame() => _game;
 
         public InputService GetInputService() => _inputService;
+
+        private async Task SaveGameInternalAsync()
+        {
+            if (IsBusy) return;
+
+            var wasPlaying = _game.State == GameState.Playing;
+            if (wasPlaying)
+                _game.Pause();
+
+            IsBusy = true;
+            GameStatus = "Сохранение игры...";
+
+            try
+            {
+                var progress = _game.GetProgress("Player");
+                await _persistenceService.SaveGameAsync(progress, _saveFilePath);
+                GameStatus = $"Игра сохранена! Счёт: {progress.CurrentScore}";
+            }
+            catch (Exception ex)
+            {
+                GameStatus = $"Ошибка сохранения: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+                if (wasPlaying)
+                    _game.Resume();
+            }
+        }
+
+        private async Task LoadGameInternalAsync()
+        {
+            if (IsBusy) return;
+
+            IsBusy = true;
+            GameStatus = "Загрузка игры...";
+
+            try
+            {
+                var progress = await _persistenceService.LoadGameAsync(_saveFilePath);
+
+                _gameLoopService.Stop();
+                _game.LoadGame(progress);
+                _gameLoopService.StartLoaded();
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _gameLoopService.RunAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        RunOnUiThread(() => GameStatus = $"Ошибка: {ex.Message}");
+                    }
+                    finally
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            IsGameRunning = false;
+                            GameStatus = "Игра остановлена";
+                        });
+                    }
+                });
+
+                UpdateGameState();
+                IsGameRunning = true;
+                IsPaused = false;
+                GameStatus = $"Игра загружена! Счёт: {progress.CurrentScore}, Уровень: {progress.Level}";
+            }
+            catch (FileNotFoundException)
+            {
+                GameStatus = "Файл сохранения не найден";
+            }
+            catch (Exception ex)
+            {
+                GameStatus = $"Ошибка загрузки: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         private void RunOnUiThread(Action action)
         {

@@ -3,12 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:DomModel.ViewModels.Converters"
         mc:Ignorable="d"
         Title="Tetris Game"
         Height="600"
         Width="800"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E1E">
+
+    <Window.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:InverseBoolConverter x:Key="InverseBool"/>
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -72,12 +78,35 @@
                         Background="#F44747"
                         Foreground="White"/>
                 
-                <Button Command="{Binding ResumeGameCommand}" 
-                        Content="Продолжить" 
+                <Button Command="{Binding ResumeGameCommand}"
+                        Content="Продолжить"
                         Margin="0,5,0,5"
                         Padding="10"
                         Background="#07B92A"
                         Foreground="White"/>
+
+                <Separator Background="#555555" Margin="0,8,0,8"/>
+
+                <Button Command="{Binding SaveGameCommand}"
+                        Content="Сохранить игру"
+                        Margin="0,0,0,5"
+                        Padding="10"
+                        Background="#9B59B6"
+                        Foreground="White"/>
+
+                <Button Command="{Binding LoadGameCommand}"
+                        Content="Загрузить игру"
+                        Margin="0,0,0,5"
+                        Padding="10"
+                        Background="#E67E22"
+                        Foreground="White"/>
+
+                <ProgressBar IsIndeterminate="True"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                             Height="6"
+                             Margin="0,2,0,0"
+                             Foreground="#9B59B6"
+                             Background="#3E3E3E"/>
 
                 <TextBlock Text="Клавиши:" Foreground="White" FontSize="12" Margin="0,15,0,5"/>
                 <TextBlock Text="← / → : Движение" Foreground="#CCCCCC" FontSize="11"/>
