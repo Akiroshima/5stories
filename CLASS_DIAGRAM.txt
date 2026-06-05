@@ -1,0 +1,306 @@
+// ДИАГРАММА КЛАССОВ В ВИДЕ КОММЕНТАРИЕВ
+/*
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                         DOMÉNНАЯ МОДЕЛЬ - ДИАГРАММА КЛАССОВ                  ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+MODELS LAYER:
+═════════════
+
+┌────────────────┐
+│     Point      │  (struct)
+├────────────────┤
+│ + X: int       │
+│ + Y: int       │
+└────────────────┘
+
+┌─────────────────────────────────────┐
+│        TetrominoType (enum)         │
+├─────────────────────────────────────┤
+│ I, O, T, S, Z, J, L                 │
+└─────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│            Tetromino                     │
+├──────────────────────────────────────────┤
+│ - Type: TetrominoType                    │
+│ - Position: Point                        │
+│ - Rotation: int                          │
+│ - Blocks: List<Point>                    │
+├──────────────────────────────────────────┤
+│ + GetAbsoluteBlocks(): List<Point>       │
+│ + Rotate(): void                         │
+│ + Move(deltaX, deltaY): void             │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│            GameBoard                     │
+├──────────────────────────────────────────┤
+│ - _grid: bool[,]  (10×20)                │
+│ + Width = 10 (const)                     │
+│ + Height = 20 (const)                    │
+├──────────────────────────────────────────┤
+│ + IsOccupied(x, y): bool                 │
+│ + SetBlock(x, y): void                   │
+│ + CanPlacePiece(piece): bool             │
+│ + PlacePiece(piece): void                │
+│ + ClearCompletedLines(): List<int>       │
+│ + IsGameOver(): bool                     │
+│ + Clear(): void                          │
+│ + GetGridCopy(): bool[,]                 │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│             Score                        │
+├──────────────────────────────────────────┤
+│ - _currentScore: int                     │
+│ - _linesCleared: int                     │
+├──────────────────────────────────────────┤
+│ + CurrentScore: int { get; set; }        │
+│ + LinesCleared: int { get; set; }        │
+│ + Level: int { get; }                    │
+├──────────────────────────────────────────┤
+│ + AddDropPoints(height): void            │
+│ + AddLinePoints(count): void             │
+│ + Reset(): void                          │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│         GameProgress                     │
+├──────────────────────────────────────────┤
+│ + CurrentScore: int                      │
+│ + LinesCleared: int                      │
+│ + Level: int                             │
+│ + SaveTime: DateTime                     │
+│ + PlayerName: string                     │
+│ + BoardState: bool[,]                    │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│      LeaderBoardEntry                    │
+├──────────────────────────────────────────┤
+│ + PlayerName: string                     │
+│ + Score: int                             │
+│ + LinesCleared: int                      │
+│ + Level: int                             │
+│ + AchievedDate: DateTime                 │
+├──────────────────────────────────────────┤
+│ + CompareTo(other): int                  │
+│ + ToString(): string                     │
+└──────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│                          Game                                  │
+│                   (Главный агрегирующий класс)                 │
+├────────────────────────────────────────────────────────────────┤
+│ - _gameBoard: GameBoard          ◄──────────────────────────┐  │
+│ - _score: Score                  ◄──────────────────────────┤  │
+│ - _currentPiece: Tetromino       ◄──────────────────────────┤  │
+│ - _nextPiece: Tetromino          ◄──────────────────────────┤  │
+│ - _gameState: GameState          ◄──────────────────────────┤  │
+│ - _observers: List<IGameObserver>◄──────────────────────────┤  │
+│ - _random: Random                                           │  │
+├────────────────────────────────────────────────────────────────┤  АГРЕГАЦИЯ
+│ + State: GameState { get; }                                 │  │
+│ + Board: GameBoard { get; }                                 │  │
+│ + Score: Score { get; }                                     │  │
+│ + CurrentPiece: Tetromino { get; }                          │  │
+│ + NextPiece: Tetromino { get; }                             │  │
+├────────────────────────────────────────────────────────────────┤
+│ + StartNewGame(): void                                         │
+│ + LoadGame(progress): void                                     │
+│ + Pause(): void                                                │
+│ + Resume(): void                                               │
+│ + EndGame(): void                                              │
+│ + MovePieceLeft(): bool                                        │
+│ + MovePieceRight(): bool                                       │
+│ + MovePieceDown(): bool                                        │
+│ + RotatePiece(): bool                                          │
+│ + PlaceCurrentPiece(): void                                    │
+│ + GetProgress(playerName): GameProgress                        │
+│ + Subscribe(observer): void                ◄──────────────────┴─ Observer Pattern
+│ + Unsubscribe(observer): void                                  │
+│ - SpawnNextPiece(): void                                       │
+│ - CreateRandomPiece(): Tetromino                               │
+└────────────────────────────────────────────────────────────────┘
+
+INTERFACES LAYER:
+═════════════════
+
+┌──────────────────────────────────────────────────┐
+│          IGameObserver                           │
+│            (интерфейс)                           │
+├──────────────────────────────────────────────────┤
+│ + OnGameStateChanged(): void                     │
+│ + OnPieceSpawned(piece): void                    │
+│ + OnLineCleared(count): void                     │
+│ + OnGameOver(score): void                        │
+└──────────────────────────────────────────────────┘
+              ↑
+              │ implements
+              │
+        GameViewModel
+
+┌──────────────────────────────────────────────────┐
+│        IGamePersistence                          │
+│            (интерфейс)                           │
+├──────────────────────────────────────────────────┤
+│ + SaveGameAsync(progress, path): Task            │
+│ + LoadGameAsync(path): Task<GameProgress>        │
+└──────────────────────────────────────────────────┘
+              ↑
+              │ implements
+              │
+    GamePersistenceService
+
+┌──────────────────────────────────────────────────┐
+│      ILeaderBoardManager                         │
+│            (интерфейс)                           │
+├──────────────────────────────────────────────────┤
+│ + GetLeaderBoardAsync(path): Task<List>          │
+│ + SaveLeaderBoardAsync(entries, path): Task      │
+│ + AddScore(name, score): void                    │
+│ + IsHighScore(score): bool                       │
+└──────────────────────────────────────────────────┘
+              ↑
+              │ implements
+              │
+     LeaderBoardService
+
+SERVICES LAYER:
+═══════════════
+
+┌────────────────────────────────────────┐
+│   GamePersistenceService               │
+│  (реализует IGamePersistence)           │
+├────────────────────────────────────────┤
+│ + SaveGameAsync(): Task                │
+│ + LoadGameAsync(): Task<GameProgress>  │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│    LeaderBoardService                  │
+│  (реализует ILeaderBoardManager)        │
+├────────────────────────────────────────┤
+│ - _leaderBoard: List<Entry>            │
+│ + GetLeaderBoardAsync(): Task<List>    │
+│ + SaveLeaderBoardAsync(): Task         │
+│ + AddScore(): void                     │
+│ + IsHighScore(): bool                  │
+└────────────────────────────────────────┘
+
+VIEWMODELS LAYER:
+═════════════════
+
+┌────────────────────────────────────────────┐
+│         ViewModelBase                      │
+│     (абстрактный базовый класс)            │
+├────────────────────────────────────────────┤
+│ + PropertyChanged: event                   │
+├────────────────────────────────────────────┤
+│ # OnPropertyChanged(name): void            │
+│ # SetProperty<T>(ref, value): bool         │
+└────────────────────────────────────────────┘
+              ↑
+              │ наследуется
+              │
+    ┌─────────┴─────────┬──────────────────┐
+    │                   │                  │
+GameViewModel    LeaderBoardViewModel   ...
+
+┌──────────────────────────────────────────────┐
+│         GameViewModel                        │
+│    (реализует IGameObserver, наследует       │
+│     ViewModelBase)                           │
+├──────────────────────────────────────────────┤
+│ - _game: Game                                │
+│ - _gridState: bool[,]                        │
+│ - _currentScore: int                         │
+│ - _linesCleared: int                         │
+│ - _level: int                                │
+│ - _gameStatus: string                        │
+│ - _isPaused: bool                            │
+│ - _leaderBoard: ObservableCollection         │
+├──────────────────────────────────────────────┤
+│ + GridState: bool[,] { get; set; }          │
+│ + CurrentScore: int { get; set; }           │
+│ + LinesCleared: int { get; set; }           │
+│ + Level: int { get; set; }                  │
+│ + GameStatus: string { get; set; }          │
+│ + IsPaused: bool { get; set; }              │
+│ + LeaderBoard: ObservableCollection          │
+├──────────────────────────────────────────────┤
+│ + StartGameCommand: ICommand                 │
+│ + PauseGameCommand: ICommand                 │
+│ + ResumeGameCommand: ICommand                │
+│ + MoveLeftCommand: ICommand                  │
+│ + MoveRightCommand: ICommand                 │
+│ + MoveDownCommand: ICommand                  │
+│ + RotateCommand: ICommand                    │
+├──────────────────────────────────────────────┤
+│ + StartGame(): void                          │
+│ + PauseGame(): void                          │
+│ + ResumeGame(): void                         │
+│ + LoadGame(progress): void                   │
+│ + SaveGame(name): GameProgress               │
+│ + OnGameStateChanged(): void  (observer)     │
+│ + OnPieceSpawned(piece): void (observer)     │
+│ + OnLineCleared(count): void  (observer)     │
+│ + OnGameOver(score): void     (observer)     │
+│ - UpdateGameState(): void                    │
+└──────────────────────────────────────────────┘
+
+VIEWS LAYER (WPF):
+══════════════════
+
+┌──────────────────────────────────────────┐
+│         GameWindow (XAML)                │
+│            + GameWindow.xaml.cs          │
+├──────────────────────────────────────────┤
+│ DataContext = new GameViewModel()        │
+│                                          │
+│ Binding: {Binding CurrentScore}          │
+│ Binding: {Binding GameStatus}            │
+│ Binding: {Binding LeaderBoard}           │
+│ Command: {Binding StartGameCommand}      │
+│ Command: {Binding MoveLeftCommand}       │
+│ ...                                      │
+└──────────────────────────────────────────┘
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ВЗАИМОСВЯЗИ:
+
+1. АГРЕГАЦИЯ:
+   Game ────▶ GameBoard (содержит состояние поля)
+   Game ────▶ Score (содержит очки)
+   Game ────▶ Tetromino (текущая фигура)
+   Game ────▶ Tetromino (следующая фигура)
+   Game ────▶ List<IGameObserver> (наблюдатели)
+
+2. НАСЛЕДОВАНИЕ:
+   GameViewModel ──▶ ViewModelBase
+   GameViewModel ──▶ IGameObserver
+
+3. РЕАЛИЗАЦИЯ ИНТЕРФЕЙСОВ:
+   GamePersistenceService ──▶ IGamePersistence
+   LeaderBoardService ──▶ ILeaderBoardManager
+   GameViewModel ──▶ IGameObserver
+
+4. ИСПОЛЬЗОВАНИЕ СЕРВИСОВ:
+   GameWindow.xaml.cs ──▶ GameViewModel
+   GameViewModel ──▶ Game
+   Game ──▶ GameBoard, Score, Tetromino
+   Services ──▶ File I/O (текстовые файлы)
+
+5. WPF BINDING:
+   GameWindow (XAML) ◄══▶ GameViewModel (Data Binding)
+                          │
+                          │ Реализует INotifyPropertyChanged
+                          │
+                          ▼
+                    ObservableCollection<T> для списков
+                    ICommand для кнопок
+
+═════════════════════════════════════════════════════════════════════════════════
+*/
