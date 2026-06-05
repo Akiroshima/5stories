@@ -19,7 +19,7 @@ namespace DomModel.Services
             try
             {
                 var directory = Path.GetDirectoryName(filePath);
-                if (!Directory.Exists(directory))
+                if (directory != null && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
                 var lines = new List<string>

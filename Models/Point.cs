@@ -14,7 +14,7 @@ namespace DomModel.Models
             Y = y;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Point)) return false;
             var other = (Point)obj;

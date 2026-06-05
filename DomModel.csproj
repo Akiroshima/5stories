@@ -1,11 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+
+  <ItemGroup>
+    <Compile Remove="DomModel.Tests\**" />
+    <None Remove="DomModel.Tests\**" />
+    <Content Remove="DomModel.Tests\**" />
+    <EmbeddedResource Remove="DomModel.Tests\**" />
+  </ItemGroup>
 
 </Project>
