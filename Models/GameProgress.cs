@@ -11,7 +11,7 @@ namespace DomModel.Models
         public int LinesCleared { get; set; }
         public int Level { get; set; }
         public DateTime SaveTime { get; set; }
-        public string PlayerName { get; set; }
+        public string PlayerName { get; set; } = string.Empty;
         public bool[,] BoardState { get; set; }
 
         public GameProgress()

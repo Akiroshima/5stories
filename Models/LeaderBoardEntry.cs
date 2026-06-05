@@ -15,6 +15,7 @@ namespace DomModel.Models
 
         public LeaderBoardEntry()
         {
+            PlayerName = string.Empty;
             AchievedDate = DateTime.Now;
         }
 
@@ -27,7 +28,7 @@ namespace DomModel.Models
             AchievedDate = achievedDate;
         }
 
-        public int CompareTo(LeaderBoardEntry other)
+        public int CompareTo(LeaderBoardEntry? other)
         {
             if (other == null)
                 return 1;
